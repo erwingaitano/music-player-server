@@ -1,0 +1,21 @@
+{
+  "name": "music-player",
+  "version": "0.0.1",
+  "description": "My custom music player",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "sequelize": "./node_modules/sequelize-cli/bin/sequelize"
+  },
+  "keywords": [
+    "music",
+    "player"
+  ],
+  "author": "Erwin Gaitan O <erwingaitano@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "mysql": "^2.13.0",
+    "sequelize": "^3.30.4",
+    "sequelize-cli": "^2.7.0"
+  }
+}
