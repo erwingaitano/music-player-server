@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "sequelize": "./node_modules/sequelize-cli/bin/sequelize",
     "db:init": "npm run sequelize -- init",
-    "db:migration:create": "npm run sequelize -- migration:create",
+    "db:migrate": "npm run sequelize -- db:migrate",
+    "db:migrate:create": "npm run sequelize -- migration:create",
     "db:model:create": "npm run sequelize -- model:create",
     "db:seed:create": "npm run sequelize -- seed:create"
   },
