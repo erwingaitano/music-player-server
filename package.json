@@ -19,6 +19,7 @@
   "author": "Erwin Gaitan O <erwingaitano@gmail.com>",
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.5.0",
     "mysql": "^2.13.0",
     "sequelize": "^3.30.4",
     "sequelize-cli": "^2.7.0"
