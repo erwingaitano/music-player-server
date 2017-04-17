@@ -13,34 +13,34 @@ module.exports = {
         primaryKey: true,
         references: { model: 'Author', key: 'id' }
       }
-    })
-    .then(() => {
-      return queryInterface.sequelize.query(`
-        INSERT INTO Author
-          (name, createdAt, updatedAt)
-        VALUES
-          ('Keane', '2010-12-31 23:59:59', '2010-12-31 23:59:59'),
-          ('Muse', '2010-12-31 23:59:59', '2010-12-31 23:59:59');
-      `);
-    })
-    .then(() => {
-      return queryInterface.sequelize.query(`
-        INSERT INTO Song
-          (name, filepath, createdAt, updatedAt)
-        VALUES
-          ('Bedshaped', '~/music/bedshaped.m4a', '2010-12-31 23:59:59', '2010-12-31 23:59:59'),
-          ('Muscle Museum', '~/music/musclemuseum.m4a', '2010-12-31 23:59:59', '2010-12-31 23:59:59');
-      `);
-    })
-    .then(() => {
-      return queryInterface.sequelize.query(`
-        INSERT INTO SongAuthor
-          (song_id, author_id)
-        VALUES
-          (1, 1),
-          (1, 2);
-      `);
     });
+    // .then(() => {
+    //   return queryInterface.sequelize.query(`
+    //     INSERT INTO Author
+    //       (name, createdAt, updatedAt)
+    //     VALUES
+    //       ('Keane', '2010-12-31 23:59:59', '2010-12-31 23:59:59'),
+    //       ('Muse', '2010-12-31 23:59:59', '2010-12-31 23:59:59');
+    //   `);
+    // })
+    // .then(() => {
+    //   return queryInterface.sequelize.query(`
+    //     INSERT INTO Song
+    //       (name, filepath, createdAt, updatedAt)
+    //     VALUES
+    //       ('Bedshaped', '~/music/bedshaped.m4a', '2010-12-31 23:59:59', '2010-12-31 23:59:59'),
+    //       ('Muscle Museum', '~/music/musclemuseum.m4a', '2010-12-31 23:59:59', '2010-12-31 23:59:59');
+    //   `);
+    // })
+    // .then(() => {
+    //   return queryInterface.sequelize.query(`
+    //     INSERT INTO SongAuthor
+    //       (song_id, author_id)
+    //     VALUES
+    //       (1, 1),
+    //       (1, 2);
+    //   `);
+    // });
     // .then(() => {
     //   return queryInterface.sequelize.query(`
     //     ALTER TABLE SongAuthor
@@ -49,7 +49,7 @@ module.exports = {
     // });
   },
 
-  down: (queryInterface) => {
+  down: queryInterface => {
     return queryInterface.dropTable('SongAuthor');
   }
 };
