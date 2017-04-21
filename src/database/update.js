@@ -2,7 +2,9 @@
 
 const fs = require('fs');
 const path = require('path');
-const Sequelize = require('sequelize');
+const mysql = require('mysql');
+const mysqlPromise = require('mysql2/promise');
+const Bluebird = require('bluebird');
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 const dbConfig = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
@@ -26,22 +28,35 @@ function getArrayDifference(array1, array2, predicateFn) {
 // Init
 
 const dbCredentials = dbConfig[process.env.NODE_ENV];
-const { dialect, username, password, database, host } = dbCredentials;
+const { username, password, database, host } = dbCredentials;
 const musicDirs = getChildDirs(songsRootDir);
-const dbConnection = new Sequelize(`${dialect}://${username}:${password}@${host}:${3306}/${database}`, {
-  logging: false
+
+const dbConnection = mysqlPromise.createConnection({
+  host, user: username, password, database, Promise: Bluebird
 });
 
-dbConnection.authenticate()
-.then(() => { console.log('Updating Database...'); })
-.then(() => dbConnection.define('Song', { name: Sequelize.STRING }, { freezeTableName: true }))
-.then(Table => [Table, Table.findAll({ where: { name: { $in: musicDirs } } })])
-.spread((Table, result) => [
-  Table, getArrayDifference(musicDirs, result, (el1, el2) => el1 === el2.dataValues.name)
-])
-.spread((Table, newItems) => Table.bulkCreate(newItems.map(el => ({ name: el }))))
-.then(() => { dbConnection.close(); })
+// `
+//   INSERT INTO Song (name, dirPath)
+//   VALUES (${}), (3, 4)
+// `
+dbConnection
+.tap(() => { console.log('Updating Database...'); })
+.then(dbc => dbc.execute('SELECT dirPath FROM Song'))
+.then(results => getArrayDifference(musicDirs, results[0], (el1, el2) => el1 === el2.dirPath))
+.then(results => {
+  const values = results
+    .map(name => {
+      const escapedName = mysql.escape(name);
+      return `(${escapedName}, ${escapedName})`;
+    })
+    .join(', ');
+
+  return dbConnection.then(dbc => dbc.execute(`
+    INSERT INTO Song (name, dirPath) VALUES ${values}
+  `));
+})
 .then(() => { console.log('Database Updated'); })
 .catch(error => {
-  console.log(error.errors);
-});
+  console.log(error.message);
+})
+.finally(() => { process.exit(0); });
