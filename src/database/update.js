@@ -35,10 +35,6 @@ const dbConnection = mysqlPromise.createConnection({
   host, user: username, password, database, Promise: Bluebird
 });
 
-// `
-//   INSERT INTO Song (name, dirPath)
-//   VALUES (${}), (3, 4)
-// `
 dbConnection
 .tap(() => { console.log('Updating Database...'); })
 .then(dbc => dbc.execute('SELECT dirPath FROM Song'))
