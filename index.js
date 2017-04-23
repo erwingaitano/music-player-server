@@ -23,23 +23,23 @@ const dbConnection = mysqlPromise.createConnection({
   Promise: Bluebird
 });
 
-function getSongParsedInfo(song) {
+function getSongParsedInfo(songFromDB) {
   return songPossibleExtensions.reduce((result, ext) => {
     if (result) return result;
 
-    const songPathInfo = path.parse(path.join(songsDirPath, song.dirPath, `file.${ext}`));
+    const songPathInfo = path.parse(path.join(songsDirPath, songFromDB.dirPath, `file.${ext}`));
 
     if (!songPathInfo.name) return result;
 
     return {
       fileDir: path.join(songPathInfo.dir, songPathInfo.base),
-      fileName: song.dirPath,
+      fileName: songFromDB.dirPath,
       ext: songPathInfo.ext
     };
   }, null);
 }
 
-function getSongFromDatabaseResults(results) {
+function getSongFromDBResults(results) {
   const song = results[0][0];
   if (!song) throw new Error('Fuck you, this song doesn\'t exist!');
   return song;
@@ -49,6 +49,8 @@ function handleError(res, err) {
   console.log(err.stack);
   res.status(500).send(err.message);
 }
+
+// API
 
 router.get('/', (req, res) => {
   dbConnection
@@ -61,7 +63,7 @@ router.get('/play/:songId', (req, res) => {
 
   dbConnection
   .then(dbc => dbc.execute(`SELECT dirPath FROM Song WHERE id = ${songId}`))
-  .then(getSongFromDatabaseResults)
+  .then(getSongFromDBResults)
   .then(() => {
     res.send(`<audio src="/song-files/${req.params.songId}" controls></audio>`);
   })
@@ -73,9 +75,9 @@ router.get('/song-files/:songId', (req, res) => {
 
   dbConnection
   .then(dbc => dbc.execute(`SELECT name, dirPath FROM Song WHERE id = ${songId}`))
-  .then(getSongFromDatabaseResults)
-  .then(song => {
-    const newSong = getSongParsedInfo(song);
+  .then(getSongFromDBResults)
+  .then(songFromDB => {
+    const newSong = getSongParsedInfo(songFromDB);
     res.set('Cache-Control', 'no-cache');
     res.download(newSong.fileDir, `${newSong.fileName}${newSong.ext}`);
   })
