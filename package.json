@@ -1,5 +1,5 @@
 {
-  "name": "music-player",
+  "name": "music-player-server",
   "version": "0.0.1",
   "description": "My custom music player",
   "main": "index.js",
