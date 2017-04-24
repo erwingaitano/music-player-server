@@ -29,7 +29,7 @@ function getArrayDifference(array1, array2, predicateFn) {
 
 const dbCredentials = dbConfig[process.env.NODE_ENV];
 const { username, password, database, host } = dbCredentials;
-const musicDirs = getChildDirs(songsRootDir);
+const songDirs = getChildDirs(songsRootDir);
 
 const dbConnection = mysqlPromise.createConnection({
   host, user: username, password, database, Promise: Bluebird
@@ -37,18 +37,24 @@ const dbConnection = mysqlPromise.createConnection({
 
 dbConnection
 .tap(() => { console.log('Updating Database...'); })
-.then(dbc => dbc.execute('SELECT dirPath FROM Song'))
-.then(results => getArrayDifference(musicDirs, results[0], (el1, el2) => el1 === el2.dirPath))
-.then(results => {
-  const values = results
-    .map(name => {
-      const escapedName = mysql.escape(name);
-      return `(${escapedName}, ${escapedName})`;
-    })
+.then(dbc => dbc.execute('SELECT id, dirPath FROM Song'))
+.then(dbResults => dbResults[0])
+.then(songsFromDB =>
+  songDirs.map(dirPath => {
+    const matchedSongInDB = songsFromDB.find(el2 => el2.dirPath === dirPath);
+    return { id: matchedSongInDB ? matchedSongInDB.id : null, name: dirPath, dirPath };
+  })
+)
+.then(updatedSongs => {
+  const songsValues = updatedSongs
+    .map(song => `(${mysql.escape(song.name)}, ${mysql.escape(song.dirPath)})`)
     .join(', ');
 
   return dbConnection.then(dbc => dbc.execute(`
-    INSERT INTO Song (name, dirPath) VALUES ${values}
+    INSERT INTO Song (name, dirPath)
+      VALUES ${songsValues}
+      ON DUPLICATE KEY UPDATE
+      name=VALUES(name);
   `));
 })
 .then(() => { console.log('Database Updated'); })

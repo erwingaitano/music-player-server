@@ -2,8 +2,8 @@
 
 # TODO
 - current playlist modal
-- download music to local
 - add cover
+- download music to local
 - remote player controls
   - fix remote slider
   - fix next song not playing automatically in background. (Posible solution is to use AVQueuePlayer)
