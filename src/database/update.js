@@ -62,6 +62,8 @@ function handleError(error) {
 }
 
 function updateSongs(songs) {
+  if (!songs.length) return null;
+
   songs = songs.map(song => {
     const artistId = (song.artist && song.artist.id) ? mysql.escape(song.artist.id) : 'NULL';
     const albumId = (song.album && song.album.id) ? mysql.escape(song.album.id) : 'NULL';
@@ -175,7 +177,7 @@ function cleanArtists() {
         .map(el => mysql.escape(el.id))
         .join(', ');
 
-      if (!corruptedArtistsIds.length) return null;
+      if (!corruptedArtistsIds || !corruptedArtistsIds.length) return null;
       return dbc.execute(`DELETE FROM Artists WHERE id IN (${corruptedArtistsIds})`);
     })
   );
@@ -195,7 +197,7 @@ function cleanAlbums() {
         .map(el => mysql.escape(el.id))
         .join(', ');
 
-      if (!corruptedAlbumsIds.length) return null;
+      if (!corruptedAlbumsIds || !corruptedAlbumsIds.length) return null;
       return dbc.execute(`DELETE FROM Albums WHERE id IN (${corruptedAlbumsIds})`);
     })
   );
@@ -220,7 +222,7 @@ function cleanSongs() {
         .map(el => mysql.escape(el.id))
         .join(', ');
 
-      if (!corruptedSongsIds.length) return null;
+      if (!corruptedSongsIds || !corruptedSongsIds.length) return null;
       return dbc.execute(`DELETE FROM Songs WHERE id IN (${corruptedSongsIds})`);
     })
   );
