@@ -28,6 +28,28 @@ function getChildDirs(dirPath) {
   }
 }
 
+function getArtists() {
+  return getChildDirs(mediaDir + '/_artists');
+}
+
+function getAlbums(artistKeyname) {
+  return getChildDirs(mediaDir + '/_artists/' + artistKeyname + '/_albums');
+}
+
+function getArtistSongs(artistKeyname) {
+  return getChildDirs(mediaDir + '/_artists/' + artistKeyname)
+    .filter(el => el !== '_albums');
+}
+
+function getAlbumSongs(albumKeyname) {
+  const artistAndAlbum = albumKeyname.split('.');
+  return getChildDirs(mediaDir + '/_artists/' + artistAndAlbum[0] + '/_albums/' + artistAndAlbum[1]);
+}
+
+function getIndependentSongs() {
+  return getChildDirs(mediaDir).filter(el => el !== '_artists');
+}
+
 function getArrayDifference(array1, array2, predicateFn) {
   return array1.reduce((total, el) => {
     if (!array2.some(el2 => predicateFn(el, el2))) total.push(el);
@@ -60,28 +82,20 @@ function updateSongs(songs) {
   `));
 }
 
-function updateArtistAlbums(artistFullDirPath, artistDirname) {
-  const albumsAndNoAlbumSongs = getChildDirs(artistFullDirPath)
-    .reduce((result, el) => {
-      if (el === '_albums') {
-        result.albums = getChildDirs(artistFullDirPath + '/_albums');
-      } else {
-        result.noAlbumSongs.push(el);
-      }
-
-      return result;
-    }, { albums: [], noAlbumSongs: [] });
+function updateArtistAlbums(artistKeyname) {
+  const artistSongs = getArtistSongs(artistKeyname);
+  const albums = getAlbums(artistKeyname);
 
   return dbConnection
   .then(dbc => dbc.execute(`
     SELECT id, keyname FROM Artists
-      WHERE keyname = ${mysql.escape(artistDirname)}
+      WHERE keyname = ${mysql.escape(artistKeyname)}
   `))
   .then(results => results[0][0])
   .tap(artistFromDB => dbConnection.then(dbc => {
-    if (!albumsAndNoAlbumSongs.albums.length) return [[]];
+    if (!albums.length) return [[]];
 
-    const albumValues = albumsAndNoAlbumSongs.albums
+    const albumValues = albums
       .map(name =>
         '(' +
           `${mysql.escape(`${artistFromDB.keyname}.${name}`)}, ` +
@@ -111,7 +125,7 @@ function updateArtistAlbums(artistFullDirPath, artistDirname) {
 
     if (artistAlbumsFromDB.length) {
       artistAlbumsFromDB.forEach(album => {
-        const albumSongs = getChildDirs(artistFullDirPath + '/_albums/' + album.keyname.match(/\.(.*)/)[1])
+        const albumSongs = getAlbumSongs(album.keyname)
           .map(name => ({
             name, keyname: name, album: { id: album.id, keyname: album.keyname }
           }));
@@ -120,10 +134,10 @@ function updateArtistAlbums(artistFullDirPath, artistDirname) {
       });
     }
 
-    if (albumsAndNoAlbumSongs.noAlbumSongs.length) {
-      const noAlbumSongs = albumsAndNoAlbumSongs.noAlbumSongs
+    if (artistSongs.length) {
+      const noAlbumSongs = artistSongs
         .map(name => ({
-          name, keyname: name, artist: { id: artistFromDB.id, keyname: artistDirname }
+          name, keyname: name, artist: { id: artistFromDB.id, keyname: artistKeyname }
         }));
 
       promises.push(updateSongs(noAlbumSongs));
@@ -134,7 +148,7 @@ function updateArtistAlbums(artistFullDirPath, artistDirname) {
 }
 
 function updateArtists() {
-  const artistDirs = getChildDirs(mediaDir + '/_artists');
+  const artistDirs = getArtists();
   const valuesToDB = artistDirs
     .map(name => `(${mysql.escape(name)}, ${mysql.escape(name)})`)
     .join(', ');
@@ -147,16 +161,8 @@ function updateArtists() {
       name=VALUES(name);
   `))
   .then(() =>
-    Bluebird.all(artistDirs.map(el => updateArtistAlbums(mediaDir + '/_artists/' + el, el)))
+    Bluebird.all(artistDirs.map(artistKeyname => updateArtistAlbums(artistKeyname)))
   );
-}
-
-function getArtists() {
-  return getChildDirs(mediaDir + '/_artists');
-}
-
-function getAlbums(artistKeyname) {
-  return getChildDirs(mediaDir + '/_artists/' + artistKeyname + '/_albums');
 }
 
 function cleanArtists() {
@@ -195,6 +201,31 @@ function cleanAlbums() {
   );
 }
 
+function cleanSongs() {
+  return dbConnection.then(dbc => dbc.execute('SELECT id, keyname FROM Songs')
+    .then(results => results[0])
+    .then(songsFromDB => {
+      const allSongsKeynames = getArtists().reduce((result, artist) => {
+        getAlbums(artist).forEach(album => {
+          const songsKeynames = getAlbumSongs(`${artist}.${album}`).map(song => `${artist}.${album}.${song}`);
+          result = result.concat(songsKeynames);
+        });
+
+        return result.concat(getArtistSongs(artist).map(song => `${artist}.${song}`));
+      }, [])
+      .concat(getIndependentSongs());
+
+      const corruptedSongsIds =
+        getArrayDifference(songsFromDB, allSongsKeynames, (el1, el2) => el1.keyname === el2)
+        .map(el => mysql.escape(el.id))
+        .join(', ');
+
+      if (!corruptedSongsIds.length) return null;
+      return dbc.execute(`DELETE FROM Songs WHERE id IN (${corruptedSongsIds})`);
+    })
+  );
+}
+
 function updateSongsWithNoAlbumArtist() {
   const songs = getChildDirs(mediaDir)
   .filter(el => el !== '_artists')
@@ -209,6 +240,7 @@ console.log('Updating Database...');
 
 cleanArtists()
 .then(cleanAlbums)
+.then(cleanSongs)
 .then(updateSongsWithNoAlbumArtist)
 .then(updateArtists)
 .then(() => { console.log('Database Updated'); })
