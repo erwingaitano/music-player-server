@@ -34,6 +34,7 @@
     - /play/playlist/:id
   - create a simple web form to add songs to playlists
   - make backups when updating the DB
+  - should allow a _info.json file inside songs/artists/albums to allow custom names
 
 - current playlist modal ios app
 - add cover

@@ -5,11 +5,11 @@ const path = require('path');
 const fs = require('fs');
 const Bluebird = require('bluebird');
 
+const helpers = require.main.require(path.join(__dirname, '../../_helpers'));
 const router = new express.Router();
 const songPossibleExtensions = ['m4a', 'mp3'];
 
 const dbConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '../../database/config.json'), 'utf8'));
-const mediaDir = path.join('/Users/erwin/Music/music-player-files/_media');
 
 const dbConnection = mysqlPromise.createConnection({
   host: dbConfig[process.env.NODE_ENV].host,
@@ -20,22 +20,17 @@ const dbConnection = mysqlPromise.createConnection({
 });
 
 function getParsedInfoSong(songFromDB) {
-  const keynames = songFromDB.keyname.split('.');
-  const keynamesLength = keynames.length;
-  let songpath;
-  if (keynamesLength === 1) songpath = keynames[0];
-  else if (keynamesLength === 2) songpath = `_artists/${keynames[0]}/${keynames[1]}`;
-  else if (keynamesLength === 3) songpath = `_artists/${keynames[0]}/_albums/${keynames[1]}/${keynames[2]}`;
+  const songFolderInfo = helpers.getSongFolderInfo(songFromDB.keyname);
 
   return songPossibleExtensions.reduce((result, ext) => {
     if (result) return result;
 
-    const songPathInfo = path.parse(path.join(mediaDir, songpath, `file.${ext}`));
+    const songPathInfo = path.parse(path.join(songFolderInfo.path, `file.${ext}`));
 
     if (!songPathInfo.name) return result;
     return {
       fileDir: path.join(songPathInfo.dir, songPathInfo.base),
-      fileName: keynames[keynamesLength - 1],
+      fileName: songFolderInfo.indepentendKeyname,
       ext: songPathInfo.ext
     };
   }, null);
@@ -53,7 +48,7 @@ function handleError(res, err) {
 
 router.get('/songs', (req, res) => {
   dbConnection
-  .then(dbc => dbc.execute('SELECT id, name, createdAt, updatedAt FROM Songs'))
+  .then(dbc => dbc.execute('SELECT id, name, covers, createdAt, updatedAt FROM Songs'))
   .then(response => { res.json(response[0]); });
 });
 

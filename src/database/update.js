@@ -6,10 +6,10 @@ const mysql = require('mysql');
 const mysqlPromise = require('mysql2/promise');
 const Bluebird = require('bluebird');
 
+const helpers = require.main.require(path.join(__dirname, '../_helpers'));
+
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 const dbConfig = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
-
-const mediaDir = path.join('/Users/erwin/Music', 'music-player-files/_media');
 
 const dbCredentials = dbConfig[process.env.NODE_ENV];
 const { username, password, database, host } = dbCredentials;
@@ -28,26 +28,37 @@ function getChildDirs(dirPath) {
   }
 }
 
+function getChildFiles(dirPath) {
+  try {
+    const dirContent = fs.readdirSync(dirPath);
+    return dirContent
+      .filter(el => fs.statSync(path.join(dirPath, el)).isFile())
+      .filter(el => el[0] !== '.');
+  } catch (err) {
+    return [];
+  }
+}
+
 function getArtists() {
-  return getChildDirs(mediaDir + '/_artists');
+  return getChildDirs(helpers.mediaDir + '/_artists');
 }
 
 function getAlbums(artistKeyname) {
-  return getChildDirs(mediaDir + '/_artists/' + artistKeyname + '/_albums');
+  return getChildDirs(helpers.mediaDir + '/_artists/' + artistKeyname + '/_albums');
 }
 
 function getArtistSongs(artistKeyname) {
-  return getChildDirs(mediaDir + '/_artists/' + artistKeyname)
+  return getChildDirs(helpers.mediaDir + '/_artists/' + artistKeyname)
     .filter(el => el !== '_albums');
 }
 
 function getAlbumSongs(albumKeyname) {
   const artistAndAlbum = albumKeyname.split('.');
-  return getChildDirs(mediaDir + '/_artists/' + artistAndAlbum[0] + '/_albums/' + artistAndAlbum[1]);
+  return getChildDirs(helpers.mediaDir + '/_artists/' + artistAndAlbum[0] + '/_albums/' + artistAndAlbum[1]);
 }
 
 function getIndependentSongs() {
-  return getChildDirs(mediaDir).filter(el => el !== '_artists');
+  return getChildDirs(helpers.mediaDir).filter(el => el !== '_artists');
 }
 
 function getArrayDifference(array1, array2, predicateFn) {
@@ -72,15 +83,21 @@ function updateSongs(songs) {
     if (artistId !== 'NULL') { keyname = song.artist.keyname + '.' + song.keyname; }
     if (albumId !== 'NULL') { keyname = song.album.keyname + '.' + song.keyname; }
 
-    return `(${mysql.escape(keyname)}, ${name}, ${artistId}, ${albumId})`;
+    const songFolderInfo = helpers.getSongFolderInfo(keyname);
+    let covers = getChildFiles(path.join(songFolderInfo.path, '_covers'))
+      .map(el => `/${songFolderInfo.pathFromRootMedia}/covers/${el}`);
+    covers = mysql.escape(JSON.stringify(covers));
+
+    return `(${mysql.escape(keyname)}, ${name}, ${covers}, ${artistId}, ${albumId})`;
   });
 
   return dbConnection
   .then(dbc => dbc.execute(`
-    INSERT INTO Songs (keyname, name, artist_id, album_id)
+    INSERT INTO Songs (keyname, name, covers, artist_id, album_id)
       VALUES ${songs}
       ON DUPLICATE KEY UPDATE
-      name=VALUES(name)
+      name=VALUES(name),
+      covers=VALUES(covers)
   `));
 }
 
@@ -229,7 +246,7 @@ function cleanSongs() {
 }
 
 function updateSongsWithNoAlbumArtist() {
-  const songs = getChildDirs(mediaDir)
+  const songs = getChildDirs(helpers.mediaDir)
   .filter(el => el !== '_artists')
   .map(name => ({ name, keyname: name }));
 
