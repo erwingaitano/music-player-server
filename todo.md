@@ -14,10 +14,21 @@
   the update script, the song moved will have a new entry in the database with the
   a new keyname but the previous entry of that song will be left in the DB and needs
   to be removed
-
-# TODO
   - playlist table
     - it can have 0 or more songs
+  - rename api endpoints to api/**
+  - create api endpoints to:
+    - /artists
+    - /playlists
+    - /playlists/:id/songs
+    - /artists/:id/songs
+    - /artists/:id/albums
+    - /artists/:id/albums/:id/songs
+
+# TODO
+  - create api endpoints to:
+    - /play/playlists
+  - create a simple web form to add songs to playlists
   - make backups when updating the DB
 
   - relationships should be defined by the folder structure
