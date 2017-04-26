@@ -51,7 +51,11 @@ function handleError(res, err) {
 
 router.get('/songs', (req, res) => {
   dbConnection
-  .then(dbc => dbc.execute(`SELECT ${attrsToReturnFromSongs} FROM Songs`))
+  .then(dbc => dbc.execute(`SELECT Songs.name, Albums.name as album, Artists.name as artist FROM Songs JOIN Albums, Artists
+    WHERE (Songs.album_id = Albums.id AND Songs.artist_id IS NULL) OR
+      (Songs.album_id IS NULL aND Songs.artist_id = Artists.id) OR
+      (Songs.album_id IS NULL AND Songs.artist_id IS NULL)
+  `))
   .then(response => { res.json(response[0]); });
 });
 
