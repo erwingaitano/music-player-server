@@ -120,6 +120,13 @@ router.get('/playlists', (req, res) => {
   .then(response => { res.json(response[0]); });
 });
 
+router.post('/playlists', (req, res) => {
+  // TODO:
+  // dbConnection
+  // .then(dbc => dbc.execute('SELECT id, name, createdAt, updatedAt FROM Playlists'))
+  // .then(response => { res.json(response[0]); });
+});
+
 router.get('/playlists/:id/songs', (req, res) => {
   const playlistId = mysql.escape(req.params.id);
 

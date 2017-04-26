@@ -24,15 +24,18 @@
     - /artists/:id/songs
     - /artists/:id/albums
     - /artists/:id/albums/:id/songs
+  - relationships should be defined by the folder structure
 
 # TODO
-  - create api endpoints to:
-    - /play/playlists
+  - create endpoints to:
+    - add songs to playlist
+    - songs endpoints also need to return the artist/album info
+  - create endpoints to:
+    - /play/playlist/:id
   - create a simple web form to add songs to playlists
   - make backups when updating the DB
 
-  - relationships should be defined by the folder structure
-- current playlist modal
+- current playlist modal ios app
 - add cover
 - download music to local
 - remote player controls
