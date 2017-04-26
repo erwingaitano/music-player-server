@@ -5,9 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const Bluebird = require('bluebird');
 
-
 const router = new express.Router();
-
 const songPossibleExtensions = ['m4a', 'mp3'];
 
 const dbConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '../../database/config.json'), 'utf8'));
@@ -57,6 +55,20 @@ router.get('/songs', (req, res) => {
   dbConnection
   .then(dbc => dbc.execute('SELECT id, name, createdAt, updatedAt FROM Songs'))
   .then(response => { res.json(response[0]); });
+});
+
+router.get('/songs/:id/file', (req, res) => {
+  const songId = mysql.escape(req.params.id);
+
+  dbConnection
+  .then(dbc => dbc.execute(`SELECT name, keyname FROM Songs WHERE id = ${songId}`))
+  .then(getSongFromDBResults)
+  .then(songFromDB => {
+    const newSong = getParsedInfoSong(songFromDB);
+    res.set('Cache-Control', 'no-cache');
+    res.download(newSong.fileDir, `${newSong.fileName}${newSong.ext}`);
+  })
+  .catch(handleError.bind(null, res));
 });
 
 router.get('/artists', (req, res) => {
@@ -117,32 +129,6 @@ router.get('/playlists/:id/songs', (req, res) => {
     WHERE playlist_id = ${playlistId} AND PlaylistSongs.song_id = Songs.id
   `))
   .then(response => { res.json(response[0]); });
-});
-
-router.get('/play/:songId', (req, res) => {
-  const songId = mysql.escape(req.params.songId);
-
-  dbConnection
-  .then(dbc => dbc.execute(`SELECT id FROM Songs WHERE id = ${songId}`))
-  .then(getSongFromDBResults)
-  .then(() => {
-    res.send(`<audio src="/api/song-files/${req.params.songId}" controls></audio>`);
-  })
-  .catch(handleError.bind(null, res));
-});
-
-router.get('/song-files/:songId', (req, res) => {
-  const songId = mysql.escape(req.params.songId);
-
-  dbConnection
-  .then(dbc => dbc.execute(`SELECT name, keyname FROM Songs WHERE id = ${songId}`))
-  .then(getSongFromDBResults)
-  .then(songFromDB => {
-    const newSong = getParsedInfoSong(songFromDB);
-    res.set('Cache-Control', 'no-cache');
-    res.download(newSong.fileDir, `${newSong.fileName}${newSong.ext}`);
-  })
-  .catch(handleError.bind(null, res));
 });
 
 module.exports = router;
