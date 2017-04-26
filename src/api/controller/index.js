@@ -9,6 +9,8 @@ const helpers = require.main.require(path.join(__dirname, '../../_helpers'));
 const router = new express.Router();
 const songPossibleExtensions = ['m4a', 'mp3'];
 const attrsToReturnFromSongs = 'Songs.id, Songs.name, Songs.covers, Songs.createdAt, Songs.updatedAt';
+const attrsToReturnFromArtists = 'Artists.id, Artists.name, Artists.covers, Artists.createdAt, Artists.updatedAt';
+const attrsToReturnFromAlbums = 'Albums.id, Albums.name, Albums.covers, Albums.createdAt, Albums.updatedAt';
 
 const dbConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '../../database/config.json'), 'utf8'));
 
@@ -69,7 +71,7 @@ router.get('/songs/:id/file', (req, res) => {
 
 router.get('/artists', (req, res) => {
   dbConnection
-  .then(dbc => dbc.execute('SELECT id, name, createdAt, updatedAt FROM Artists'))
+  .then(dbc => dbc.execute(`SELECT ${attrsToReturnFromArtists} FROM Artists`))
   .then(response => { res.json(response[0]); });
 });
 
@@ -91,8 +93,8 @@ router.get('/artists/:id/albums', (req, res) => {
 
   dbConnection
   .then(dbc => dbc.execute(`
-    SELECT Albums.id, Albums.name FROM Artists
-    JOIN Albums
+    SELECT ${attrsToReturnFromAlbums} FROM Albums
+    JOIN Artists
     WHERE Artists.id = ${artistId} AND Albums.artist_id = Artists.id
   `))
   .then(response => { res.json(response[0]); });
