@@ -16,6 +16,8 @@
   to be removed
 
 # TODO
+  - playlist table
+    - it can have 0 or more songs
   - make backups when updating the DB
 
   - relationships should be defined by the folder structure
