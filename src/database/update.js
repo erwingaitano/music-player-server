@@ -68,19 +68,27 @@ function getArrayDifference(array1, array2, predicateFn) {
   }, []);
 }
 
-function getSongCovers(dirPath) {
-  const pathRelativeToMedia = dirPath.substring(helpers.mediaDir.length + 1);
-  return getChildFiles(path.join(dirPath, '_covers'))
+function getCovers(fullpath, pathRelativeToMedia) {
+  return getChildFiles(path.join(fullpath, '_covers'))
     .map(el => `/api/covers/${pathRelativeToMedia}/_covers/${el}`);
+}
+
+function getArtistCovers(artistKeyname) {
+  const fullpath = path.join(`${helpers.mediaDir}/_artists/${artistKeyname}`);
+  const pathRelativeToMedia = fullpath.substring(helpers.mediaDir.length + 1);
+  return getCovers(fullpath, pathRelativeToMedia);
+}
+
+function getSongCovers(fullpath) {
+  const pathRelativeToMedia = fullpath.substring(helpers.mediaDir.length + 1);
+  return getCovers(fullpath, pathRelativeToMedia);
 }
 
 function getAlbumCovers(albumKeyname) {
   const artistAndAlbum = albumKeyname.split('.');
   const fullpath = path.join(`${helpers.mediaDir}/_artists/${artistAndAlbum[0]}/_albums/${artistAndAlbum[1]}`);
   const pathRelativeToMedia = fullpath.substring(helpers.mediaDir.length + 1);
-
-  return getChildFiles(path.join(fullpath, '_covers'))
-    .map(el => `/api/covers/${pathRelativeToMedia}/_covers/${el}`);
+  return getCovers(fullpath, pathRelativeToMedia);
 }
 
 function updateSongs(songs) {
@@ -180,15 +188,20 @@ function updateArtistAlbums(artistKeyname) {
 function updateArtists() {
   const artistDirs = getArtists();
   const valuesToDB = artistDirs
-    .map(name => `(${mysql.escape(name)}, ${mysql.escape(name)})`)
+    .map(keyname => {
+      const covers = mysql.escape(JSON.stringify(getArtistCovers(keyname)));
+      keyname = mysql.escape(keyname);
+      return `(${keyname}, ${keyname}, ${covers})`;
+    })
     .join(', ');
 
   return dbConnection
   .then(dbc => dbc.execute(`
-    INSERT INTO Artists (name, keyname)
+    INSERT INTO Artists (name, keyname, covers)
       VALUES ${valuesToDB}
       ON DUPLICATE KEY UPDATE
-      name=VALUES(name);
+      name=VALUES(name),
+      covers=VALUES(covers)
   `))
   .then(() =>
     Bluebird.all(artistDirs.map(artistKeyname => updateArtistAlbums(artistKeyname)))
