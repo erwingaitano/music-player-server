@@ -8,6 +8,7 @@ const Bluebird = require('bluebird');
 const helpers = require.main.require(path.join(__dirname, '../../_helpers'));
 const router = new express.Router();
 const songPossibleExtensions = ['m4a', 'mp3'];
+const attrsToReturnFromSongs = 'Songs.id, Songs.name, Songs.covers, Songs.createdAt, Songs.updatedAt';
 
 const dbConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '../../database/config.json'), 'utf8'));
 
@@ -48,7 +49,7 @@ function handleError(res, err) {
 
 router.get('/songs', (req, res) => {
   dbConnection
-  .then(dbc => dbc.execute('SELECT id, name, covers, createdAt, updatedAt FROM Songs'))
+  .then(dbc => dbc.execute(`SELECT ${attrsToReturnFromSongs} FROM Songs`))
   .then(response => { res.json(response[0]); });
 });
 
@@ -77,7 +78,7 @@ router.get('/artists/:id/songs', (req, res) => {
 
   dbConnection
   .then(dbc => dbc.execute(`
-    SELECT Songs.id, Songs.name FROM Artists
+    SELECT ${attrsToReturnFromSongs} FROM Artists
     JOIN Songs, Albums
     WHERE Artists.id = ${artistId} AND
       (Artists.id = Songs.artist_id OR (Albums.artist_id = ${artistId} AND Songs.album_id = Albums.id))
@@ -102,7 +103,7 @@ router.get('/artists/:id/albums/:albumId/songs', (req, res) => {
 
   dbConnection
   .then(dbc => dbc.execute(`
-    SELECT Songs.id, Songs.name FROM Albums
+    SELECT ${attrsToReturnFromSongs} FROM Albums
     JOIN Songs
     WHERE Albums.id = ${albumId} AND Songs.album_id = Albums.id
   `))
@@ -115,22 +116,28 @@ router.get('/playlists', (req, res) => {
   .then(response => { res.json(response[0]); });
 });
 
-router.post('/playlists', (req, res) => {
+// router.post('/playlists', (req, res) => {
   // TODO:
   // dbConnection
   // .then(dbc => dbc.execute('SELECT id, name, createdAt, updatedAt FROM Playlists'))
   // .then(response => { res.json(response[0]); });
-});
+// });
 
 router.get('/playlists/:id/songs', (req, res) => {
   const playlistId = mysql.escape(req.params.id);
 
   dbConnection
   .then(dbc => dbc.execute(`
-    SELECT Songs.id, Songs.name FROM PlaylistSongs JOIN Songs
+    SELECT ${attrsToReturnFromSongs} FROM PlaylistSongs JOIN Songs
     WHERE playlist_id = ${playlistId} AND PlaylistSongs.song_id = Songs.id
   `))
   .then(response => { res.json(response[0]); });
+});
+
+router.get('/covers/*', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  const file = path.join(helpers.mediaDir, req.params[0]);
+  res.download(file, path.parse(file).base);
 });
 
 module.exports = router;

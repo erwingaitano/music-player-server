@@ -68,8 +68,19 @@ function getArrayDifference(array1, array2, predicateFn) {
   }, []);
 }
 
-function handleError(error) {
-  console.log(error);
+function getSongCovers(dirPath) {
+  const pathRelativeToMedia = dirPath.substring(helpers.mediaDir.length + 1);
+  return getChildFiles(path.join(dirPath, '_covers'))
+    .map(el => `/api/covers/${pathRelativeToMedia}/_covers/${el}`);
+}
+
+function getAlbumCovers(albumKeyname) {
+  const artistAndAlbum = albumKeyname.split('.');
+  const fullpath = path.join(`${helpers.mediaDir}/_artists/${artistAndAlbum[0]}/_albums/${artistAndAlbum[1]}`);
+  const pathRelativeToMedia = fullpath.substring(helpers.mediaDir.length + 1);
+
+  return getChildFiles(path.join(fullpath, '_covers'))
+    .map(el => `/api/covers/${pathRelativeToMedia}/_covers/${el}`);
 }
 
 function updateSongs(songs) {
@@ -84,9 +95,7 @@ function updateSongs(songs) {
     if (albumId !== 'NULL') { keyname = song.album.keyname + '.' + song.keyname; }
 
     const songFolderInfo = helpers.getSongFolderInfo(keyname);
-    let covers = getChildFiles(path.join(songFolderInfo.path, '_covers'))
-      .map(el => `/${songFolderInfo.pathFromRootMedia}/covers/${el}`);
-    covers = mysql.escape(JSON.stringify(covers));
+    const covers = mysql.escape(JSON.stringify(getSongCovers(path.join(songFolderInfo.path))));
 
     return `(${mysql.escape(keyname)}, ${name}, ${covers}, ${artistId}, ${albumId})`;
   });
@@ -115,20 +124,22 @@ function updateArtistAlbums(artistKeyname) {
     if (!albums.length) return [[]];
 
     const albumValues = albums
-      .map(name =>
-        '(' +
-          `${mysql.escape(`${artistFromDB.keyname}.${name}`)}, ` +
-          `${mysql.escape(name)}, ` +
-          `${mysql.escape(artistFromDB.id)}` +
-        ')'
-      )
+      .map(album => {
+        const keyname = mysql.escape(`${artistFromDB.keyname}.${album}`);
+        const name = mysql.escape(album);
+        const covers = mysql.escape(JSON.stringify(getAlbumCovers(`${artistFromDB.keyname}.${album}`)));
+        const artistId = mysql.escape(artistFromDB.id);
+
+        return `(${keyname}, ${name}, ${covers}, ${artistId})`;
+      })
       .join(', ');
 
     return dbc.execute(`
-      INSERT INTO Albums (keyname, name, artist_id)
+      INSERT INTO Albums (keyname, name, covers, artist_id)
       VALUES ${albumValues}
       ON DUPLICATE KEY UPDATE
-      name=VALUES(name)
+      name=VALUES(name),
+      covers=VALUES(covers)
     `);
   }))
   .then(artistFromDB => dbConnection.then(dbc => [
@@ -263,6 +274,6 @@ cleanArtists()
 .then(updateSongsWithNoAlbumArtist)
 .then(updateArtists)
 .then(() => { console.log('Database Updated'); })
-.catch(handleError)
+.catch(console.log)
 .finally(() => { process.exit(0); });
 

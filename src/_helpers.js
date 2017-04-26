@@ -13,7 +13,6 @@ module.exports = {
     else if (keynamesLength === 3) songpath = `_artists/${keynames[0]}/_albums/${keynames[1]}/${keynames[2]}`;
 
     return {
-      pathFromRootMedia: songpath,
       path: path.join(mediaDir, songpath),
       independentKeyname: keynames[keynamesLength - 1]
     };
