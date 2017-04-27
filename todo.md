@@ -1,7 +1,7 @@
   - response should be in alphabetical order
+  - allow rename playlists
 
 # TODO
-  - allow rename playlists
   - should allow a _info.json file inside songs/artists/albums to allow:
     - custom names
     - start/end song

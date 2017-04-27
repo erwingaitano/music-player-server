@@ -173,6 +173,20 @@ router.post('/playlists', bodyParser.json(), (req, res) => {
   .catch(handleError.bind(null, res));
 });
 
+router.patch('/playlists', bodyParser.json(), (req, res) => {
+  const id = mysql.escape(req.body.id);
+  const name = mysql.escape(req.body.name);
+
+  dbConnection
+  .then(dbc => dbc.execute(`
+    UPDATE Playlists
+    SET name=${name}
+    WHERE id=${id}
+  `))
+  .then(response => { res.json(response[0]); })
+  .catch(handleError.bind(null, res));
+});
+
 router.delete('/playlists', bodyParser.json(), (req, res) => {
   const id = mysql.escape(req.body.id);
 

@@ -22,6 +22,13 @@ router.get('/', (req, res) => {
             <input name='id' value=${el.id} hidden=true />
             <button class='button is-delete'>Remove Playlist</button>
           </form>
+          <form style='display: inline-block; margin: 0 0 0 15px' method='post'>
+            <input name='method' value='update' hidden=true />
+            <input name='id' value=${el.id} hidden=true />
+            <label>Rename: </label>
+            <input type='text' name='name' value='${el.name.replace(/'/g, '&apos;')}' />
+            <button class='button'>Rename</button>
+          </form>
         </li>
       `).join('')}
     </ul>
@@ -44,6 +51,10 @@ router.post('/', bodyParser.urlencoded({ extended: true }), (req, res) => {
     promise = requestPromise.post(`${req.protocoledHost}/api/playlists`, { body: { name: req.body.name }, json: true });
   } else if (method === 'delete') {
     promise = requestPromise.delete(`${req.protocoledHost}/api/playlists`, { body: { id: req.body.id }, json: true });
+  } else if (method === 'update') {
+    promise = requestPromise.patch(
+      `${req.protocoledHost}/api/playlists`, { body: { id: req.body.id, name: req.body.name }, json: true }
+    );
   }
   promise.then(() => { res.redirect(req.originalUrl.split('?')[0]); });
 });
