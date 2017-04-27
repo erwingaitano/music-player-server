@@ -12,7 +12,7 @@
     "db:migrate:create": "npm run sequelize -- migration:create",
     "db:model:create": "npm run sequelize -- model:create",
     "db:seed:create": "npm run sequelize -- seed:create",
-    "db:update": "node ./src/database/update",
+    "db:update": "npm run db:backup && node ./src/database/update",
     "db:backup": "mysqldump -u root -p  music-player > ./dbbackups/$(date +%Y%m%d-%H%M%S).sql"
   },
   "keywords": [

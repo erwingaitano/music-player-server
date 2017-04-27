@@ -15,7 +15,10 @@ router.get('/', (req, res) => {
 });
 
 router.get('/play/:id', (req, res) => {
-  res.send(`<audio src="/api/songs/${req.params.id}/file" controls></audio>`);
+  res.send(`
+    ${helpers.pageStyles}
+    <audio src="/api/songs/${req.params.id}/file" autoplay=true controls></audio>
+  `);
 });
 
 module.exports = router;
