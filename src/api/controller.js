@@ -227,9 +227,9 @@ router.delete('/playlists/:id/songs/:songId', (req, res) => {
 });
 
 router.get('/covers/*', (req, res) => {
-  res.set('Cache-Control', 'no-cache');
   const file = path.join(helpers.mediaDir, req.params[0]);
-  res.download(file, path.parse(file).base);
+  res.set({ 'Content-Type': 'image/jpeg' });
+  res.sendFile(file);
 });
 
 module.exports = router;

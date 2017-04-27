@@ -71,7 +71,7 @@ function getArrayDifference(array1, array2, predicateFn) {
 
 function getCovers(fullpath, pathRelativeToMedia) {
   return getChildFiles(path.join(fullpath, '_covers'))
-    .map(el => `/api/covers/${pathRelativeToMedia}/_covers/${el}`);
+    .map(el => `/covers/${pathRelativeToMedia}/_covers/${el}`);
 }
 
 function getArtistCovers(artistKeyname) {
