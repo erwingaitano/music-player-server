@@ -50,18 +50,28 @@ const dbConnection = mysqlPromise.createConnection({
   Promise: Bluebird
 });
 
+function fileExists(path) {
+  try {
+    return fs.statSync(path).isFile();
+  } catch (err) {
+    return false;
+  }
+}
+
 function getParsedInfoSong(songFromDB) {
   const songFolderInfo = helpers.getSongFolderInfo(songFromDB.keyname);
 
   return songPossibleExtensions.reduce((result, ext) => {
     if (result) return result;
 
-    const songPathInfo = path.parse(path.join(songFolderInfo.path, `file.${ext}`));
+    const songPath = path.join(songFolderInfo.path, `file.${ext}`);
 
-    if (!songPathInfo.name) return result;
+    if (!fileExists(songPath)) return result;
+    const songPathInfo = path.parse(songPath);
+
     return {
       fileDir: path.join(songPathInfo.dir, songPathInfo.base),
-      fileName: songFolderInfo.indepentendKeyname,
+      fileName: songFolderInfo.independentKeyname,
       ext: songPathInfo.ext
     };
   }, null);
@@ -87,7 +97,6 @@ router.get('/songs', (req, res) => {
 
 router.get('/songs/:id/file', (req, res) => {
   const songId = mysql.escape(req.params.id);
-
   dbConnection
   .then(dbc => dbc.execute(`SELECT name, keyname FROM Songs WHERE id = ${songId}`))
   .then(getSongFromDBResults)
