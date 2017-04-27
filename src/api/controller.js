@@ -33,7 +33,9 @@ const albumAttrs = `
   Albums.updatedAt as album_updatedAt
 `;
 
-const playlistAttrs = 'Playlists.name';
+const playlistAttrs = 'id, name, createdAt, updatedAt';
+
+const orderSongsBy = 'Artists.name ASC, Albums.name ASC, Songs.name ASC';
 
 const songArtistAlbumAttrs = `${songAttrs}, ${artistAttrs}, ${albumAttrs}`;
 
@@ -94,7 +96,7 @@ function handleError(res, err) {
 
 router.get('/songs', (req, res) => {
   dbConnection
-  .then(dbc => dbc.execute(queryGetSongs))
+  .then(dbc => dbc.execute(`${queryGetSongs} ORDER BY ${orderSongsBy}`))
   .then(response => { res.json(response[0]); });
 });
 
@@ -113,7 +115,7 @@ router.get('/songs/:id/file', (req, res) => {
 
 router.get('/artists', (req, res) => {
   dbConnection
-  .then(dbc => dbc.execute(`SELECT ${artistAttrs} FROM Artists`))
+  .then(dbc => dbc.execute(`SELECT ${artistAttrs} FROM Artists ORDER BY Artists.name ASC`))
   .then(response => { res.json(response[0]); });
 });
 
@@ -123,6 +125,7 @@ router.get('/artists/:id/songs', (req, res) => {
   .then(dbc => dbc.execute(`
     ${queryGetSongs}
       WHERE Artists.id = ${artistId} OR Albums.artist_id = ${artistId} AND Songs.album_id = Albums.id
+      ORDER BY ${orderSongsBy}
   `))
   .then(response => { res.json(response[0]); });
 });
@@ -135,6 +138,7 @@ router.get('/artists/:id/albums', (req, res) => {
     SELECT ${albumAttrs} FROM Albums
     INNER JOIN Artists
     WHERE Artists.id = ${artistId} AND Albums.artist_id = Artists.id
+    ORDER BY Albums.name ASC
   `))
   .then(response => { res.json(response[0]); });
 });
@@ -146,13 +150,14 @@ router.get('/artists/:id/albums/:albumId/songs', (req, res) => {
   .then(dbc => dbc.execute(`
     ${queryGetSongs}
     WHERE Albums.id = ${albumId} AND Songs.album_id = Albums.id
+    ORDER BY ${orderSongsBy}
   `))
   .then(response => { res.json(response[0]); });
 });
 
 router.get('/playlists', (req, res) => {
   dbConnection
-  .then(dbc => dbc.execute('SELECT id, name, createdAt, updatedAt FROM Playlists'))
+  .then(dbc => dbc.execute(`SELECT ${playlistAttrs} FROM Playlists ORDER BY Playlists.name ASC`))
   .then(response => { res.json(response[0]); });
 });
 
@@ -196,6 +201,7 @@ router.get('/playlists/:id/songs', (req, res) => {
     ${queryGetSongs}
     INNER JOIN PlaylistSongs
     WHERE PlaylistSongs.playlist_id = ${playlistId} AND PlaylistSongs.song_id = Songs.id
+    ORDER BY ${orderSongsBy}
   `))
   .then(response => { res.json(response[0]); });
 });

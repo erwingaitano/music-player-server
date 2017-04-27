@@ -1,8 +1,12 @@
+  - response should be in alphabetical order
 
 # TODO
   - allow rename playlists
-  - response should be in alphabetical order
-  - should allow a _info.json file inside songs/artists/albums to allow custom names
+  - should allow a _info.json file inside songs/artists/albums to allow:
+    - custom names
+    - start/end song
+    - volume (seems hard to do)
+  - should allow a _lyrics file for obvious reasons
 
 # NOTES
 - gonna rely on a local server to serve the music files since i can't find a free good
