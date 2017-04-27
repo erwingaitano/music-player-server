@@ -33,6 +33,8 @@ const albumAttrs = `
   Albums.updatedAt as album_updatedAt
 `;
 
+const playlistAttrs = 'Playlists.name';
+
 const songArtistAlbumAttrs = `${songAttrs}, ${artistAttrs}, ${albumAttrs}`;
 
 const queryGetSongs = `
@@ -176,6 +178,14 @@ router.delete('/playlists', bodyParser.json(), (req, res) => {
   `))
   .then(response => { res.json(response[0]); })
   .catch(handleError.bind(null, res));
+});
+
+router.get('/playlists/:id', (req, res) => {
+  const id = mysql.escape(req.params.id);
+
+  dbConnection
+  .then(dbc => dbc.execute(`SELECT ${playlistAttrs} FROM Playlists WHERE id=${id}`))
+  .then(response => { res.json(response[0][0]); });
 });
 
 router.get('/playlists/:id/songs', (req, res) => {

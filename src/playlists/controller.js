@@ -1,29 +1,27 @@
 const express = require('express');
 const requestPromise = require('request-promise');
 const Bluebird = require('bluebird');
+const path = require('path');
 const bodyParser = require('body-parser');
 
+const helpers = require.main.require(path.join(__dirname, '../_helpers'));
 const router = new express.Router();
-
-function getSpanTagForSong(song) {
-  const artistName = song.artist_name ? ` - ${song.artist_name}` : '';
-  return `<span>${song.song_name}${artistName}</span>`;
-}
 
 router.get('/', (req, res) => {
   // res.send(`<audio src="/api/songs/${req.params.songId}/file" controls></audio>`);
-  requestPromise(req.protocoledHost + '/api/playlists')
-  .then(response => res.send(`
+  requestPromise(`${req.protocoledHost}/api/playlists`, { json: true })
+  .then(playlists => res.send(`
+    ${helpers.pageStyles}
+    <a href='/'>Back to index</a>
     <h1>Playlists</h1>
     <ul>
-      ${JSON.parse(response).map(el => `
+      ${playlists.map(el => `
         <li>
           <a href='/playlists/${el.id}'>${el.name}</a>
-          <span>-</span>
           <form style='display: inline-block; margin: 0' method='post'>
             <input name='method' value='delete' hidden=true />
             <input name='id' value=${el.id} hidden=true />
-            <button>Delete Playlist</button>
+            <button class='is-delete'>Remove Playlist</button>
           </form>
         </li>
       `).join('')}
@@ -55,51 +53,30 @@ router.get('/:id', (req, res) => {
   const id = req.params.id;
 
   Bluebird.join(
-    requestPromise(req.protocoledHost + '/api/playlists/' + id + '/songs'),
-    requestPromise(req.protocoledHost + '/api/songs')
+    requestPromise(`${req.protocoledHost}/api/playlists/${id}`, { json: true }),
+    requestPromise(`${req.protocoledHost}/api/playlists/${id}/songs`, { json: true }),
+    requestPromise(`${req.protocoledHost}/api/songs`, { json: true })
   )
-  .spread((playlistSongs, allSongs) => res.send(`
+  .spread((playlist, playlistSongs, allSongs) => res.send(`
+    ${helpers.pageStyles}
     <a href='/playlists'>Back to playlists</a>
-    <h1>Playlist Songs</h1>
-    <ul>
-      ${JSON.parse(playlistSongs).map(el => `
-        <li>
-          ${getSpanTagForSong(el)}
-          <span>-</span>
-          <form style='display: inline-block; margin: 0' method='post'>
-            <input name='method' value='delete' hidden=true />
-            <input name='songId' value=${el.song_id} hidden=true />
-            <button>Remove From Playlist</button>
-          </form>
-        </li>
-      `).join('')}
-    </ul>
-
-    <h1>All Songs</h1>
-    <ul>
-      ${JSON.parse(allSongs).map(el => `
-        <li>
-          ${getSpanTagForSong(el)}
-          ${(function init() {
-            const repeated = JSON.parse(playlistSongs).filter(el2 => el2.song_id === el.song_id);
-            const repeatedLength = repeated.length;
-            if (!repeatedLength) return '';
-            const timeLabel = repeatedLength === 1 ? 'time' : 'times';
-            return `
-              <span style='font-size: 12px; color: #888'>
-                (Added ${repeatedLength} ${timeLabel})
-              </span>
-            `;
-          }())}
-          <span>-</span>
-          <form style='display: inline-block; margin: 0' method='post'>
-            <input name='method' value='post' hidden=true />
-            <input name='songId' value=${el.song_id} hidden=true />
-            <button>Add to Playlist</button>
-          </form>
-        </li>
-      `).join('')}
-    </ul>
+    <h1>Songs of Playlist <span class='secondary-color'>${playlist.name}</span></h1>
+      <ul>
+        ${!playlistSongs.length ?
+          '<li><span class="no-songs">No Songs in the playlist</span></li>' :
+          playlistSongs.map(el => `
+            <li>
+              ${helpers.getSpanTagForSong(el)}
+              <form style='display: inline-block; margin: 0' method='post'>
+                <input name='method' value='delete' hidden=true />
+                <input name='songId' value=${el.song_id} hidden=true />
+                <button class='is-delete'>Remove From Playlist</button>
+              </form>
+            </li>
+          `).join('')
+        }
+      </ul>
+    ${helpers.getUlListHtmlForAllSongs(allSongs, { playlist: { addedSongs: playlistSongs } })}
   `));
 });
 
