@@ -206,7 +206,6 @@ router.post('/playlists/:id/songs/:songId', (req, res) => {
 router.delete('/playlists/:id/songs/:songId', (req, res) => {
   const playlistId = mysql.escape(req.params.id);
   const songId = mysql.escape(req.params.songId);
-  console.log(playlistId, songId);
 
   dbConnection
   .then(dbc => dbc.execute(`

@@ -5,6 +5,11 @@ const bodyParser = require('body-parser');
 
 const router = new express.Router();
 
+function getSpanTagForSong(song) {
+  const artistName = song.artist_name ? ` - ${song.artist_name}` : '';
+  return `<span>${song.song_name}${artistName}</span>`;
+}
+
 router.get('/', (req, res) => {
   // res.send(`<audio src="/api/songs/${req.params.songId}/file" controls></audio>`);
   requestPromise(req.protocoledHost + '/api/playlists')
@@ -59,12 +64,11 @@ router.get('/:id', (req, res) => {
     <ul>
       ${JSON.parse(playlistSongs).map(el => `
         <li>
-          <span>${el.song_name}</span>
+          ${getSpanTagForSong(el)}
           <span>-</span>
-          <form
-            style='display: inline-block; margin: 0'
-            method='post' action='?deletesongId=${el.song_id}'
-          >
+          <form style='display: inline-block; margin: 0' method='post'>
+            <input name='method' value='delete' hidden=true />
+            <input name='songId' value=${el.song_id} hidden=true />
             <button>Remove From Playlist</button>
           </form>
         </li>
@@ -75,7 +79,7 @@ router.get('/:id', (req, res) => {
     <ul>
       ${JSON.parse(allSongs).map(el => `
         <li>
-          <span>${el.song_name}</span>
+          ${getSpanTagForSong(el)}
           ${(function init() {
             const repeated = JSON.parse(playlistSongs).filter(el2 => el2.song_id === el.song_id);
             const repeatedLength = repeated.length;
@@ -88,10 +92,9 @@ router.get('/:id', (req, res) => {
             `;
           }())}
           <span>-</span>
-          <form
-            style='display: inline-block; margin: 0'
-            method='post' action='?addsongId=${el.song_id}'
-          >
+          <form style='display: inline-block; margin: 0' method='post'>
+            <input name='method' value='post' hidden=true />
+            <input name='songId' value=${el.song_id} hidden=true />
             <button>Add to Playlist</button>
           </form>
         </li>
@@ -100,16 +103,16 @@ router.get('/:id', (req, res) => {
   `));
 });
 
-router.post('/:id', (req, res) => {
+router.post('/:id', bodyParser.urlencoded({ extended: true }), (req, res) => {
   const playlistId = req.params.id;
-  const addSongId = req.query.addsongId;
-  const deletesongId = req.query.deletesongId;
+  const songId = req.body.songId;
+  const method = req.body.method;
   let promise;
 
-  if (addSongId) {
-    promise = requestPromise.post(`${req.protocoledHost}/api/playlists/${playlistId}/songs/${addSongId}`);
-  } else if (deletesongId) {
-    promise = requestPromise.del(`${req.protocoledHost}/api/playlists/${playlistId}/songs/${deletesongId}`);
+  if (method === 'post') {
+    promise = requestPromise.post(`${req.protocoledHost}/api/playlists/${playlistId}/songs/${songId}`);
+  } else if (method === 'delete') {
+    promise = requestPromise.del(`${req.protocoledHost}/api/playlists/${playlistId}/songs/${songId}`);
   }
 
   promise.then(() => { res.redirect(req.originalUrl.split('?')[0]); });
