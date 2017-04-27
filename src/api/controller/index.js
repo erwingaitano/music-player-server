@@ -8,9 +8,37 @@ const Bluebird = require('bluebird');
 const helpers = require.main.require(path.join(__dirname, '../../_helpers'));
 const router = new express.Router();
 const songPossibleExtensions = ['m4a', 'mp3'];
-const attrsToReturnFromSongs = 'Songs.id, Songs.name, Songs.covers, Songs.createdAt, Songs.updatedAt';
-const attrsToReturnFromArtists = 'Artists.id, Artists.name, Artists.covers, Artists.createdAt, Artists.updatedAt';
-const attrsToReturnFromAlbums = 'Albums.id, Albums.name, Albums.covers, Albums.createdAt, Albums.updatedAt';
+const songAttrs = `
+  Songs.id as song_id,
+  Songs.name as song_name,
+  Songs.covers as song_covers,
+  Songs.createdAt as song_createdAt,
+  Songs.updatedAt as song_updatedAt
+`;
+
+const artistAttrs = `
+  Artists.id as artist_id,
+  Artists.name as artist_name,
+  Artists.covers as artist_covers,
+  Artists.createdAt as artist_createdAt,
+  Artists.updatedAt as artist_updatedAt
+`;
+
+const albumAttrs = `
+  Albums.id as album_id,
+  Albums.name as album_name,
+  Albums.covers as album_covers,
+  Albums.createdAt as album_createdAt,
+  Albums.updatedAt as album_updatedAt
+`;
+
+const songArtistAlbumAttrs = `${songAttrs}, ${artistAttrs}, ${albumAttrs}`;
+
+const queryGetSongs = `
+  SELECT ${songArtistAlbumAttrs} FROM Songs
+      LEFT JOIN Albums ON Songs.album_id = Albums.id
+      LEFT JOIN Artists ON Artists.id = Songs.artist_id OR Artists.id = Albums.artist_id
+`;
 
 const dbConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '../../database/config.json'), 'utf8'));
 
@@ -49,13 +77,11 @@ function handleError(res, err) {
   res.status(500).send(err.message);
 }
 
+// Routes
+
 router.get('/songs', (req, res) => {
   dbConnection
-  .then(dbc => dbc.execute(`SELECT Songs.name, Albums.name as album, Artists.name as artist FROM Songs JOIN Albums, Artists
-    WHERE (Songs.album_id = Albums.id AND Songs.artist_id IS NULL) OR
-      (Songs.album_id IS NULL aND Songs.artist_id = Artists.id) OR
-      (Songs.album_id IS NULL AND Songs.artist_id IS NULL)
-  `))
+  .then(dbc => dbc.execute(queryGetSongs))
   .then(response => { res.json(response[0]); });
 });
 
@@ -75,19 +101,16 @@ router.get('/songs/:id/file', (req, res) => {
 
 router.get('/artists', (req, res) => {
   dbConnection
-  .then(dbc => dbc.execute(`SELECT ${attrsToReturnFromArtists} FROM Artists`))
+  .then(dbc => dbc.execute(`SELECT ${artistAttrs} FROM Artists`))
   .then(response => { res.json(response[0]); });
 });
 
 router.get('/artists/:id/songs', (req, res) => {
   const artistId = mysql.escape(req.params.id);
-
   dbConnection
   .then(dbc => dbc.execute(`
-    SELECT ${attrsToReturnFromSongs} FROM Artists
-    JOIN Songs, Albums
-    WHERE Artists.id = ${artistId} AND
-      (Artists.id = Songs.artist_id OR (Albums.artist_id = ${artistId} AND Songs.album_id = Albums.id))
+    ${queryGetSongs}
+      WHERE Artists.id = ${artistId} OR Albums.artist_id = ${artistId} AND Songs.album_id = Albums.id
   `))
   .then(response => { res.json(response[0]); });
 });
@@ -97,8 +120,8 @@ router.get('/artists/:id/albums', (req, res) => {
 
   dbConnection
   .then(dbc => dbc.execute(`
-    SELECT ${attrsToReturnFromAlbums} FROM Albums
-    JOIN Artists
+    SELECT ${albumAttrs} FROM Albums
+    INNER JOIN Artists
     WHERE Artists.id = ${artistId} AND Albums.artist_id = Artists.id
   `))
   .then(response => { res.json(response[0]); });
@@ -109,8 +132,7 @@ router.get('/artists/:id/albums/:albumId/songs', (req, res) => {
 
   dbConnection
   .then(dbc => dbc.execute(`
-    SELECT ${attrsToReturnFromSongs} FROM Albums
-    JOIN Songs
+    ${queryGetSongs}
     WHERE Albums.id = ${albumId} AND Songs.album_id = Albums.id
   `))
   .then(response => { res.json(response[0]); });
@@ -134,8 +156,9 @@ router.get('/playlists/:id/songs', (req, res) => {
 
   dbConnection
   .then(dbc => dbc.execute(`
-    SELECT ${attrsToReturnFromSongs} FROM PlaylistSongs JOIN Songs
-    WHERE playlist_id = ${playlistId} AND PlaylistSongs.song_id = Songs.id
+    ${queryGetSongs}
+    INNER JOIN PlaylistSongs
+    WHERE PlaylistSongs.playlist_id = ${playlistId} AND PlaylistSongs.song_id = Songs.id
   `))
   .then(response => { res.json(response[0]); });
 });

@@ -24,12 +24,12 @@
     - /artists/:id/songs
     - /artists/:id/albums
     - /artists/:id/albums/:id/songs
+    - songs endpoints also need to return the artist/album info
   - relationships should be defined by the folder structure
 
 # TODO
   - create endpoints to:
     - add songs to playlist
-    - songs endpoints also need to return the artist/album info
   - create endpoints to:
     - /play/playlist/:id
   - create a simple web form to add songs to playlists

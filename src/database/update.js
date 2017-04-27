@@ -47,18 +47,19 @@ function getAlbums(artistKeyname) {
   return getChildDirs(helpers.mediaDir + '/_artists/' + artistKeyname + '/_albums');
 }
 
+function getIndependentSongs() {
+  return getChildDirs(helpers.mediaDir).filter(el => el !== '_artists' && el !== '_covers');
+}
+
 function getArtistSongs(artistKeyname) {
   return getChildDirs(helpers.mediaDir + '/_artists/' + artistKeyname)
-    .filter(el => el !== '_albums');
+    .filter(el => el !== '_albums' && el !== '_covers');
 }
 
 function getAlbumSongs(albumKeyname) {
   const artistAndAlbum = albumKeyname.split('.');
-  return getChildDirs(helpers.mediaDir + '/_artists/' + artistAndAlbum[0] + '/_albums/' + artistAndAlbum[1]);
-}
-
-function getIndependentSongs() {
-  return getChildDirs(helpers.mediaDir).filter(el => el !== '_artists');
+  return getChildDirs(helpers.mediaDir + '/_artists/' + artistAndAlbum[0] + '/_albums/' + artistAndAlbum[1])
+    .filter(el => el !== '_albums' && el !== '_covers');
 }
 
 function getArrayDifference(array1, array2, predicateFn) {
@@ -270,11 +271,7 @@ function cleanSongs() {
 }
 
 function updateSongsWithNoAlbumArtist() {
-  const songs = getChildDirs(helpers.mediaDir)
-  .filter(el => el !== '_artists')
-  .map(name => ({ name, keyname: name }));
-
-  return updateSongs(songs);
+  return updateSongs(getIndependentSongs());
 }
 
 // Init
