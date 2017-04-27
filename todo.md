@@ -24,15 +24,15 @@
     - /artists/:id/songs
     - /artists/:id/albums
     - /artists/:id/albums/:id/songs
+    - /play/playlist
     - songs endpoints also need to return the artist/album info
   - relationships should be defined by the folder structure
+  - create a simple web form to add songs to playlists
+  - endpoint to add songs to playlist
 
 # TODO
   - create endpoints to:
-    - add songs to playlist
-  - create endpoints to:
-    - /play/playlist/:id
-  - create a simple web form to add songs to playlists
+    - /play/songs
   - make backups when updating the DB
   - should allow a _info.json file inside songs/artists/albums to allow custom names
 

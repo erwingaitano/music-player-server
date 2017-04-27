@@ -2,10 +2,11 @@ const express = require('express');
 const mysql = require('mysql');
 const mysqlPromise = require('mysql2/promise');
 const path = require('path');
+const bodyParser = require('body-parser');
 const fs = require('fs');
 const Bluebird = require('bluebird');
 
-const helpers = require.main.require(path.join(__dirname, '../../_helpers'));
+const helpers = require.main.require(path.join(__dirname, '../_helpers'));
 const router = new express.Router();
 const songPossibleExtensions = ['m4a', 'mp3'];
 const songAttrs = `
@@ -40,7 +41,7 @@ const queryGetSongs = `
       LEFT JOIN Artists ON Artists.id = Songs.artist_id OR Artists.id = Albums.artist_id
 `;
 
-const dbConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '../../database/config.json'), 'utf8'));
+const dbConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '../database/config.json'), 'utf8'));
 
 const dbConnection = mysqlPromise.createConnection({
   host: dbConfig[process.env.NODE_ENV].host,
@@ -153,12 +154,29 @@ router.get('/playlists', (req, res) => {
   .then(response => { res.json(response[0]); });
 });
 
-// router.post('/playlists', (req, res) => {
-  // TODO:
-  // dbConnection
-  // .then(dbc => dbc.execute('SELECT id, name, createdAt, updatedAt FROM Playlists'))
-  // .then(response => { res.json(response[0]); });
-// });
+router.post('/playlists', bodyParser.json(), (req, res) => {
+  const name = mysql.escape(req.body.name);
+
+  dbConnection
+  .then(dbc => dbc.execute(`
+    INSERT INTO Playlists (name)
+    VALUES (${name})
+  `))
+  .then(response => { res.json(response[0]); })
+  .catch(handleError.bind(null, res));
+});
+
+router.delete('/playlists', bodyParser.json(), (req, res) => {
+  const id = mysql.escape(req.body.id);
+
+  dbConnection
+  .then(dbc => dbc.execute(`
+    DELETE FROM Playlists
+    WHERE Playlists.id=${id}
+  `))
+  .then(response => { res.json(response[0]); })
+  .catch(handleError.bind(null, res));
+});
 
 router.get('/playlists/:id/songs', (req, res) => {
   const playlistId = mysql.escape(req.params.id);
@@ -168,6 +186,33 @@ router.get('/playlists/:id/songs', (req, res) => {
     ${queryGetSongs}
     INNER JOIN PlaylistSongs
     WHERE PlaylistSongs.playlist_id = ${playlistId} AND PlaylistSongs.song_id = Songs.id
+  `))
+  .then(response => { res.json(response[0]); });
+});
+
+router.post('/playlists/:id/songs/:songId', (req, res) => {
+  const playlistId = mysql.escape(req.params.id);
+  const songId = mysql.escape(req.params.songId);
+
+  dbConnection
+  .then(dbc => dbc.execute(`
+    INSERT INTO PlaylistSongs (playlist_id, song_id)
+    VALUES (${playlistId}, ${songId})
+  `))
+  .then(response => { res.json(response[0]); })
+  .catch(handleError.bind(null, res));
+});
+
+router.delete('/playlists/:id/songs/:songId', (req, res) => {
+  const playlistId = mysql.escape(req.params.id);
+  const songId = mysql.escape(req.params.songId);
+  console.log(playlistId, songId);
+
+  dbConnection
+  .then(dbc => dbc.execute(`
+    DELETE FROM PlaylistSongs
+    WHERE playlist_id=${playlistId} AND song_id=${songId}
+    LIMIT 1
   `))
   .then(response => { res.json(response[0]); });
 });

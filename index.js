@@ -5,12 +5,19 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
 const port = 3000;
 const app = express();
-const apiController = require.main.require(path.join(__dirname, '/src/api/controller/index'));
+const apiController = require.main.require(path.join(__dirname, '/src/api/controller'));
+const playlistsController = require.main.require(path.join(__dirname, '/src/playlists/controller'));
+
+app.use((req, res, next) => {
+  req.protocoledHost = `${req.protocol}://${req.get('host')}`;
+  next();
+});
 
 app.use('/api/', apiController);
+app.use('/playlists', playlistsController);
 
-app.get('/play/:songId', (req, res) => {
-  res.send(`<audio src="/api/songs/${req.params.songId}/file" controls></audio>`);
+app.get('/play/songs', (req, res) => {
+  res.send('LUL');
 });
 
 app.listen(port, () => {
