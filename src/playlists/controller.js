@@ -8,7 +8,6 @@ const helpers = require.main.require(path.join(__dirname, '../_helpers'));
 const router = new express.Router();
 
 router.get('/', (req, res) => {
-  // res.send(`<audio src="/api/songs/${req.params.songId}/file" controls></audio>`);
   requestPromise(`${req.protocoledHost}/api/playlists`, { json: true })
   .then(playlists => res.send(`
     ${helpers.pageStyles}
@@ -21,7 +20,7 @@ router.get('/', (req, res) => {
           <form style='display: inline-block; margin: 0' method='post'>
             <input name='method' value='delete' hidden=true />
             <input name='id' value=${el.id} hidden=true />
-            <button class='is-delete'>Remove Playlist</button>
+            <button class='button is-delete'>Remove Playlist</button>
           </form>
         </li>
       `).join('')}
@@ -32,7 +31,7 @@ router.get('/', (req, res) => {
       <input name='method' value='post' hidden=true />
       <label>Name:</label>
       <input name='name' type='text' />
-      <button>Create</button>
+      <button class='button'>Create</button>
     </form>
   `));
 });
@@ -60,22 +59,9 @@ router.get('/:id', (req, res) => {
   .spread((playlist, playlistSongs, allSongs) => res.send(`
     ${helpers.pageStyles}
     <a href='/playlists'>Back to playlists</a>
-    <h1>Songs of Playlist <span class='secondary-color'>${playlist.name}</span></h1>
-      <ul>
-        ${!playlistSongs.length ?
-          '<li><span class="no-songs">No Songs in the playlist</span></li>' :
-          playlistSongs.map(el => `
-            <li>
-              ${helpers.getSpanTagForSong(el)}
-              <form style='display: inline-block; margin: 0' method='post'>
-                <input name='method' value='delete' hidden=true />
-                <input name='songId' value=${el.song_id} hidden=true />
-                <button class='is-delete'>Remove From Playlist</button>
-              </form>
-            </li>
-          `).join('')
-        }
-      </ul>
+    ${helpers.getUlListHtmlForAllSongs(playlistSongs, {
+      title: `Songs of Playlist <span class='secondary-color'>${playlist.name}`, removePlaylist: true
+    })}
     ${helpers.getUlListHtmlForAllSongs(allSongs, { playlist: { addedSongs: playlistSongs } })}
   `));
 });
