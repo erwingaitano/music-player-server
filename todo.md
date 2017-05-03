@@ -2,6 +2,7 @@
   - allow rename playlists
 
 # TODO
+  - should allow adding genres to songs
   - should allow a _info.json file inside songs/artists/albums to allow:
     - custom names
     - start/end song
