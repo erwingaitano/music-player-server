@@ -6,12 +6,11 @@ const mysql = require('mysql');
 const mysqlPromise = require('mysql2/promise');
 const Bluebird = require('bluebird');
 
-const helpers = require.main.require(path.join(__dirname, '../_helpers'));
+const projectRootPath = path.join(__dirname, '../');
+const helpers = require.main.require(path.join(projectRootPath, 'src/_helpers'));
+const dbConfig = JSON.parse(fs.readFileSync(path.join(projectRootPath, 'src/database/config.json'), 'utf8'));
 
-process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-const dbConfig = JSON.parse(fs.readFileSync(path.join(__dirname, './config.json'), 'utf8'));
-
-const dbCredentials = dbConfig[process.env.NODE_ENV];
+const dbCredentials = dbConfig.development;
 const { username, password, database, host } = dbCredentials;
 const dbConnection = mysqlPromise.createConnection({
   host, user: username, password, database, Promise: Bluebird

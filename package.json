@@ -11,8 +11,7 @@
     "db:migrate": "npm run sequelize -- db:migrate",
     "db:migrate:create": "npm run sequelize -- migration:create",
     "db:model:create": "npm run sequelize -- model:create",
-    "db:seed:create": "npm run sequelize -- seed:create",
-    "db:update": "npm run db:backup && node ./src/database/update"
+    "db:seed:create": "npm run sequelize -- seed:create"
   },
   "keywords": [
     "music",
