@@ -1,14 +1,11 @@
-  - response should be in alphabetical order
-  - allow rename playlists
 
 # TODO
-  - dont allow folder/filenames with a dot in their name
-  - should allow adding genres to songs
-  - should allow a _info.json file inside songs/artists/albums to allow:
-    - custom names
-    - start/end song
-    - volume (seems hard to do)
-  - should allow a _lyrics file for obvious reasons
+- should allow adding genres to songs
+- should allow a _info.json file inside songs/artists/albums to allow:
+  - custom names
+  - start/end song
+  - volume (seems hard to do)
+- should allow a _lyrics file for obvious reasons
 
 # NOTES
 - gonna rely on a local server to serve the music files since i can't find a good free one
@@ -17,6 +14,11 @@
   pass: iknowwhichismyname
 
 # DONE
+- response should be in alphabetical order
+- allow rename playlists
+- dont allow folder/filenames with a dot in their name
+  (actually now the keynameSeparator is ~ so we can use dots again!)
+
 - dismiss songs modal
 - change db structure to be:
   - artists:

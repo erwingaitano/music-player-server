@@ -2,6 +2,8 @@ const path = require('path');
 
 const mediaDir = path.join('/Users/erwin/Music', 'music-player-files/_media');
 
+const keynameSeparator = '~';
+
 const pageStyles = `
   <style>
     body { font-size: 14px; }
@@ -54,7 +56,7 @@ function getRepeatedSpanTagForPlaylist(song, playlistSongs) {
 }
 
 function getSongFolderInfo(songKeyname) {
-  const keynames = songKeyname.split('.');
+  const keynames = songKeyname.split(keynameSeparator);
   const keynamesLength = keynames.length;
   let songpath;
   if (keynamesLength === 1) songpath = keynames[0];
@@ -100,6 +102,7 @@ function getUlListHtmlForAllSongs(songs, options = {}) {
 }
 
 module.exports = {
+  keynameSeparator,
   mediaDir,
   getSpanTagForSong,
   pageStyles,

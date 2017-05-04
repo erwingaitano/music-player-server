@@ -10,7 +10,8 @@ const projectRootPath = path.join(__dirname, '../');
 const helpers = require.main.require(path.join(projectRootPath, 'src/_helpers'));
 const dbConfig = JSON.parse(fs.readFileSync(path.join(projectRootPath, 'src/database/config.json'), 'utf8'));
 
-const keynameSeparator = '~';
+const keynameSeparator = helpers.keynameSeparator;
+const mediaDir = helpers.mediaDir;
 const dbCredentials = dbConfig.development;
 const { username, password, database, host } = dbCredentials;
 const dbConnection = mysqlPromise.createConnection({
@@ -40,25 +41,25 @@ function getChildFiles(dirPath) {
 }
 
 function getArtists() {
-  return getChildDirs(helpers.mediaDir + '/_artists');
+  return getChildDirs(mediaDir + '/_artists');
 }
 
 function getAlbums(artistKeyname) {
-  return getChildDirs(helpers.mediaDir + '/_artists/' + artistKeyname + '/_albums');
+  return getChildDirs(mediaDir + '/_artists/' + artistKeyname + '/_albums');
 }
 
 function getIndependentSongs() {
-  return getChildDirs(helpers.mediaDir).filter(el => el !== '_artists' && el !== '_covers');
+  return getChildDirs(mediaDir).filter(el => el !== '_artists' && el !== '_covers');
 }
 
 function getArtistSongs(artistKeyname) {
-  return getChildDirs(helpers.mediaDir + '/_artists/' + artistKeyname)
+  return getChildDirs(mediaDir + '/_artists/' + artistKeyname)
     .filter(el => el !== '_albums' && el !== '_covers');
 }
 
 function getAlbumSongs(albumKeyname) {
   const artistAndAlbum = albumKeyname.split(keynameSeparator);
-  return getChildDirs(helpers.mediaDir + '/_artists/' + artistAndAlbum[0] + '/_albums/' + artistAndAlbum[1])
+  return getChildDirs(mediaDir + '/_artists/' + artistAndAlbum[0] + '/_albums/' + artistAndAlbum[1])
     .filter(el => el !== '_albums' && el !== '_covers');
 }
 
@@ -75,20 +76,20 @@ function getCovers(fullpath, pathRelativeToMedia) {
 }
 
 function getArtistCovers(artistKeyname) {
-  const fullpath = path.join(`${helpers.mediaDir}/_artists/${artistKeyname}`);
-  const pathRelativeToMedia = fullpath.substring(helpers.mediaDir.length + 1);
+  const fullpath = path.join(`${mediaDir}/_artists/${artistKeyname}`);
+  const pathRelativeToMedia = fullpath.substring(mediaDir.length + 1);
   return getCovers(fullpath, pathRelativeToMedia);
 }
 
 function getSongCovers(fullpath) {
-  const pathRelativeToMedia = fullpath.substring(helpers.mediaDir.length + 1);
+  const pathRelativeToMedia = fullpath.substring(mediaDir.length + 1);
   return getCovers(fullpath, pathRelativeToMedia);
 }
 
 function getAlbumCovers(albumKeyname) {
   const artistAndAlbum = albumKeyname.split(keynameSeparator);
-  const fullpath = path.join(`${helpers.mediaDir}/_artists/${artistAndAlbum[0]}/_albums/${artistAndAlbum[1]}`);
-  const pathRelativeToMedia = fullpath.substring(helpers.mediaDir.length + 1);
+  const fullpath = path.join(`${mediaDir}/_artists/${artistAndAlbum[0]}/_albums/${artistAndAlbum[1]}`);
+  const pathRelativeToMedia = fullpath.substring(mediaDir.length + 1);
   return getCovers(fullpath, pathRelativeToMedia);
 }
 
@@ -230,7 +231,7 @@ function cleanAlbums() {
     .then(results => results[0])
     .then(albumsFromDB => {
       const allAlbumsKeynames = getArtists().reduce((result, artist) => {
-        getAlbums(artist).forEach(album => { result.push(`${artist}.${album}`); });
+        getAlbums(artist).forEach(album => { result.push(`${artist}${keynameSeparator}${album}`); });
         return result;
       }, []);
 
@@ -251,11 +252,12 @@ function cleanSongs() {
     .then(songsFromDB => {
       const allSongsKeynames = getArtists().reduce((result, artist) => {
         getAlbums(artist).forEach(album => {
-          const songsKeynames = getAlbumSongs(`${artist}.${album}`).map(song => `${artist}.${album}.${song}`);
+          const songsKeynames = getAlbumSongs(`${artist}${keynameSeparator}${album}`)
+            .map(song => `${artist}${keynameSeparator}${album}${keynameSeparator}${song}`);
           result = result.concat(songsKeynames);
         });
 
-        return result.concat(getArtistSongs(artist).map(song => `${artist}.${song}`));
+        return result.concat(getArtistSongs(artist).map(song => `${artist}${keynameSeparator}${song}`));
       }, [])
       .concat(getIndependentSongs());
 
