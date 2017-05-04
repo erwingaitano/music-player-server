@@ -10,6 +10,7 @@ const projectRootPath = path.join(__dirname, '../');
 const helpers = require.main.require(path.join(projectRootPath, 'src/_helpers'));
 const dbConfig = JSON.parse(fs.readFileSync(path.join(projectRootPath, 'src/database/config.json'), 'utf8'));
 
+const keynameSeparator = '~';
 const dbCredentials = dbConfig.development;
 const { username, password, database, host } = dbCredentials;
 const dbConnection = mysqlPromise.createConnection({
@@ -56,7 +57,7 @@ function getArtistSongs(artistKeyname) {
 }
 
 function getAlbumSongs(albumKeyname) {
-  const artistAndAlbum = albumKeyname.split('.');
+  const artistAndAlbum = albumKeyname.split(keynameSeparator);
   return getChildDirs(helpers.mediaDir + '/_artists/' + artistAndAlbum[0] + '/_albums/' + artistAndAlbum[1])
     .filter(el => el !== '_albums' && el !== '_covers');
 }
@@ -85,7 +86,7 @@ function getSongCovers(fullpath) {
 }
 
 function getAlbumCovers(albumKeyname) {
-  const artistAndAlbum = albumKeyname.split('.');
+  const artistAndAlbum = albumKeyname.split(keynameSeparator);
   const fullpath = path.join(`${helpers.mediaDir}/_artists/${artistAndAlbum[0]}/_albums/${artistAndAlbum[1]}`);
   const pathRelativeToMedia = fullpath.substring(helpers.mediaDir.length + 1);
   return getCovers(fullpath, pathRelativeToMedia);
@@ -99,8 +100,8 @@ function updateSongs(songs) {
     const albumId = (song.album && song.album.id) ? mysql.escape(song.album.id) : 'NULL';
     const name = mysql.escape(song.name);
     let keyname = song.keyname;
-    if (artistId !== 'NULL') { keyname = song.artist.keyname + '.' + song.keyname; }
-    if (albumId !== 'NULL') { keyname = song.album.keyname + '.' + song.keyname; }
+    if (artistId !== 'NULL') { keyname = song.artist.keyname + keynameSeparator + song.keyname; }
+    if (albumId !== 'NULL') { keyname = song.album.keyname + keynameSeparator + song.keyname; }
 
     const songFolderInfo = helpers.getSongFolderInfo(keyname);
     const covers = mysql.escape(JSON.stringify(getSongCovers(path.join(songFolderInfo.path))));
@@ -133,9 +134,9 @@ function updateArtistAlbums(artistKeyname) {
 
     const albumValues = albums
       .map(album => {
-        const keyname = mysql.escape(`${artistFromDB.keyname}.${album}`);
+        const keyname = mysql.escape(`${artistFromDB.keyname}${keynameSeparator}${album}`);
         const name = mysql.escape(album);
-        const covers = mysql.escape(JSON.stringify(getAlbumCovers(`${artistFromDB.keyname}.${album}`)));
+        const covers = mysql.escape(JSON.stringify(getAlbumCovers(`${artistFromDB.keyname}${keynameSeparator}${album}`)));
         const artistId = mysql.escape(artistFromDB.id);
 
         return `(${keyname}, ${name}, ${covers}, ${artistId})`;
