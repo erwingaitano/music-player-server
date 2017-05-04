@@ -2,6 +2,7 @@
   - allow rename playlists
 
 # TODO
+  - dont allow folder/filenames with a dot in their name
   - should allow adding genres to songs
   - should allow a _info.json file inside songs/artists/albums to allow:
     - custom names
@@ -10,7 +11,7 @@
   - should allow a _lyrics file for obvious reasons
 
 # NOTES
-- gonna rely on a local server to serve the music files since i can't find a free good
+- gonna rely on a local server to serve the music files since i can't find a good free one
   solution for cloud storage for static files
 - https://profreehost.com/account/
   pass: iknowwhichismyname
