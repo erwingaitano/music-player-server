@@ -1,8 +1,10 @@
 const path = require('path');
+const fs = require('fs');
 
 const mediaDir = path.join('/Users/erwin/Music', 'music-player-files/_media');
 
 const keynameSeparator = '~';
+const songPossibleExtensions = ['m4a', 'mp3'];
 
 const pageStyles = `
   <style>
@@ -69,6 +71,33 @@ function getSongFolderInfo(songKeyname) {
   };
 }
 
+function fileExists(path) {
+  try {
+    return fs.statSync(path).isFile();
+  } catch (err) {
+    return false;
+  }
+}
+
+function getParsedInfoSongWithSongKeyname(songKeyname) {
+  const songFolderInfo = getSongFolderInfo(songKeyname);
+
+  return songPossibleExtensions.reduce((result, ext) => {
+    if (result) return result;
+
+    const songPath = path.join(songFolderInfo.path, `file.${ext}`);
+
+    if (!fileExists(songPath)) return result;
+    const songPathInfo = path.parse(songPath);
+
+    return {
+      fileDir: path.join(songPathInfo.dir, songPathInfo.base),
+      fileName: songFolderInfo.independentKeyname,
+      ext: songPathInfo.ext
+    };
+  }, null);
+}
+
 function getUlListHtmlForAllSongs(songs, options = {}) {
   return `
     <h1>${options.title || 'All Songs'}</h1>
@@ -107,5 +136,6 @@ module.exports = {
   getSpanTagForSong,
   pageStyles,
   getSongFolderInfo,
+  getParsedInfoSongWithSongKeyname,
   getUlListHtmlForAllSongs
 };

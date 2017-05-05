@@ -8,9 +8,9 @@ const Bluebird = require('bluebird');
 
 const helpers = require.main.require(path.join(__dirname, '../_helpers'));
 const router = new express.Router();
-const songPossibleExtensions = ['m4a', 'mp3'];
 const songAttrs = `
   Songs.id as song_id,
+  Songs.keyname as song_keyname,
   Songs.name as song_name,
   Songs.covers as song_covers,
   Songs.createdAt as song_createdAt,
@@ -55,31 +55,8 @@ const dbConnection = mysqlPromise.createConnection({
   Promise: Bluebird
 });
 
-function fileExists(path) {
-  try {
-    return fs.statSync(path).isFile();
-  } catch (err) {
-    return false;
-  }
-}
-
 function getParsedInfoSong(songFromDB) {
-  const songFolderInfo = helpers.getSongFolderInfo(songFromDB.keyname);
-
-  return songPossibleExtensions.reduce((result, ext) => {
-    if (result) return result;
-
-    const songPath = path.join(songFolderInfo.path, `file.${ext}`);
-
-    if (!fileExists(songPath)) return result;
-    const songPathInfo = path.parse(songPath);
-
-    return {
-      fileDir: path.join(songPathInfo.dir, songPathInfo.base),
-      fileName: songFolderInfo.independentKeyname,
-      ext: songPathInfo.ext
-    };
-  }, null);
+  return helpers.getParsedInfoSongWithSongKeyname(songFromDB.keyname);
 }
 
 function getSongFromDBResults(results) {

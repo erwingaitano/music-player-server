@@ -106,17 +106,20 @@ function updateSongs(songs) {
 
     const songFolderInfo = helpers.getSongFolderInfo(keyname);
     const covers = mysql.escape(JSON.stringify(getSongCovers(path.join(songFolderInfo.path))));
+    const fileExtension = mysql.escape(helpers.getParsedInfoSongWithSongKeyname(keyname).ext);
+    keyname = mysql.escape(keyname);
 
-    return `(${mysql.escape(keyname)}, ${name}, ${covers}, ${artistId}, ${albumId})`;
+    return `(${keyname}, ${name}, ${covers}, ${artistId}, ${albumId}, ${fileExtension})`;
   });
 
   return dbConnection
   .then(dbc => dbc.execute(`
-    INSERT INTO Songs (keyname, name, covers, artist_id, album_id)
+    INSERT INTO Songs (keyname, name, covers, artist_id, album_id, fileExtension)
       VALUES ${songs}
       ON DUPLICATE KEY UPDATE
       name=VALUES(name),
-      covers=VALUES(covers)
+      covers=VALUES(covers),
+      fileExtension=VALUES(fileExtension)
   `));
 }
 
@@ -286,6 +289,8 @@ cleanArtists()
 .then(updateSongsWithNoAlbumArtist)
 .then(updateArtists)
 .then(() => { console.log('Database Updated'); })
-.catch(console.log)
-.finally(() => { process.exit(0); });
-
+.then(() => { process.exit(0); })
+.catch(err => {
+  console.error(err);
+  process.exit(1);
+});

@@ -9,7 +9,8 @@
 
 # NOTES
 - gonna rely on a local server to serve the music files since i can't find a good free one
-  solution for cloud storage for static files
+  solution for cloud storage for static files.
+  (Actually no, all the devices that wants to play, need to have the files save locally)
 - https://profreehost.com/account/
   pass: iknowwhichismyname
 
