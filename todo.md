@@ -1,5 +1,6 @@
 
 # TODO
+- verify that the folders are in a consistent state (this probably should be a test)
 - should allow adding genres to songs
 - should allow a _info.json file inside songs/artists/albums to allow:
   - custom names

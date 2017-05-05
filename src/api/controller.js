@@ -13,6 +13,7 @@ const songAttrs = `
   Songs.keyname as song_keyname,
   Songs.name as song_name,
   Songs.covers as song_covers,
+  Songs.fileExtension as song_fileExtension,
   Songs.createdAt as song_createdAt,
   Songs.updatedAt as song_updatedAt
 `;

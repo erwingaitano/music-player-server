@@ -70,27 +70,25 @@ function getArrayDifference(array1, array2, predicateFn) {
   }, []);
 }
 
-function getCovers(fullpath, pathRelativeToMedia) {
+function getCovers(fullpath) {
+  const pathRelativeToMedia = fullpath.substring(mediaDir.length + 1);
   return getChildFiles(path.join(fullpath, '_covers'))
-    .map(el => `/covers/${pathRelativeToMedia}/_covers/${el}`);
+    .map(el => `/${pathRelativeToMedia}/_covers/${el}`);
 }
 
 function getArtistCovers(artistKeyname) {
   const fullpath = path.join(`${mediaDir}/_artists/${artistKeyname}`);
-  const pathRelativeToMedia = fullpath.substring(mediaDir.length + 1);
-  return getCovers(fullpath, pathRelativeToMedia);
+  return getCovers(fullpath);
 }
 
 function getSongCovers(fullpath) {
-  const pathRelativeToMedia = fullpath.substring(mediaDir.length + 1);
-  return getCovers(fullpath, pathRelativeToMedia);
+  return getCovers(fullpath);
 }
 
 function getAlbumCovers(albumKeyname) {
   const artistAndAlbum = albumKeyname.split(keynameSeparator);
   const fullpath = path.join(`${mediaDir}/_artists/${artistAndAlbum[0]}/_albums/${artistAndAlbum[1]}`);
-  const pathRelativeToMedia = fullpath.substring(mediaDir.length + 1);
-  return getCovers(fullpath, pathRelativeToMedia);
+  return getCovers(fullpath);
 }
 
 function updateSongs(songs) {
