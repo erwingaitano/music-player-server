@@ -3,7 +3,7 @@ const path = require('path');
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
-const port = 3000;
+const port = 4000;
 const app = express();
 const apiController = require.main.require(path.join(__dirname, '/src/api/controller'));
 const indexController = require.main.require(path.join(__dirname, '/src/index/controller'));
