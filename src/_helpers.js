@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 
-const mediaDir = path.join('/Users/erwin/Music', 'music-player-files/_media');
+const mediaDir = path.join('/Users/erwin/MEGASync', 'music-player-files/_media');
 
 const keynameSeparator = '~';
 const songPossibleExtensions = ['m4a', 'mp3'];
