@@ -85,7 +85,7 @@ function getParsedInfoSongWithSongKeyname(songKeyname) {
   return songPossibleExtensions.reduce((result, ext) => {
     if (result) return result;
 
-    const songPath = path.join(songFolderInfo.path, `file.${ext}`);
+    const songPath = path.join(songFolderInfo.path, `_file.${ext}`);
 
     if (!fileExists(songPath)) return result;
     const songPathInfo = path.parse(songPath);
