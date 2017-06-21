@@ -98,22 +98,33 @@ const mediaPath = '/Users/erwin/MEGAsync/music-player-files/_media';
 
   songDirs.forEach(el => {
     const dirs = getChildDirs(el);
-    const files = getChildFiles(el);
+    const files = getChildFiles(el).map(el => el.split('/').pop());
+
+    const mediaFilesCount = files
+      .filter(el => (el === '_file.mp3' || el === '_file.m4a')).length;
 
     const hasBadDirs = dirs.some(el => el.split('/').pop() !== '_covers');
-    const hasBadFiles = files.some(el => {
-      const name = el.split('/').pop();
-      if (name === '_file.mp3' || name === 'revisedBestAudio' ||
-        name === '_file.m4a' || name === '_lyrics.txt' || name === '.DS_Store') return false;
+
+    const hasBadFiles = files.some(name => {
+      if (name === '_file.mp3' || name === '_file.m4a') {
+        return false;
+      }
+
+      if (name === 'revisedBestAudio' ||
+          name === '_lyrics.txt' ||
+          name === '.DS_Store') {
+        return false;
+      }
       return true;
     });
 
-    assert(!hasBadFiles, 'must contain 1 _file.[mp3|m4a] file, can contain 1 _lyrics.txt file, can contain .DS_Store file');
+    assert.equal(mediaFilesCount, 1, 'must contain 1 _file.[mp3|m4a]');
+    assert(!hasBadFiles, 'can contain 1 _lyrics.txt file, can contain .DS_Store file');
     assert(!hasBadDirs, 'can only contain _covers dir');
   });
 }());
 
-// cover folders
+// cover dirs
 (function init() {
   const coverDirs = getChildDirs(mediaPath, { recursive: true })
     .filter(el => el.split('/').pop() === '_covers');
@@ -123,7 +134,7 @@ const mediaPath = '/Users/erwin/MEGAsync/music-player-files/_media';
     const files = getChildFiles(el).map(el => el.split('/').pop()).filter(el => el !== '.DS_Store');
 
     const hasBadFiles = files.some(el => !(/\.jpg$/.test(el)));
-    assert(dirs.length === 0, 'must not contain folders');
+    assert(dirs.length === 0, 'must not contain dirs');
     assert(!hasBadFiles, 'must have 1 or more jpg files and can contain .DS_Store');
   });
 }());
