@@ -27,6 +27,7 @@
     "fs-extra": "^3.0.0",
     "mysql": "^2.13.0",
     "mysql2": "^1.2.0",
+    "node-helpers": "git+https://github.com/erwingaitano/node-helpers.git",
     "nodemon": "^1.11.0",
     "request": "^2.81.0",
     "request-promise": "^4.2.0",
