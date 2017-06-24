@@ -1,5 +1,6 @@
 #! /usr/bin/env node
 
+require('./_tests');
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql');
