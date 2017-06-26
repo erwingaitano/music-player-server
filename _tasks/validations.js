@@ -1,9 +1,9 @@
 const nodeHelpers = require('node-helpers');
 const path = require('path');
 const assert = require('assert');
+const { mediaPath } = require('./vars');
 
 const { getChildFolders, getChildFiles } = nodeHelpers.file;
-const mediaPath = '/Users/erwin/MEGAsync/music-player-files/_media';
 
 // all dirs
 (function init() {

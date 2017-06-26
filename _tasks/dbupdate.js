@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 
-require('./_tests');
+require('./removeFiles');
+require('./validations');
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql');
